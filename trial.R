@@ -1,2 +1,5 @@
-delete and get a new file
-I am now editing from GitHub web
+RStudio -> GitHub
+Save, commit, tick the project, push branch
+
+GitHub -> RStudio
+Pull branches
