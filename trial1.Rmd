@@ -9,14 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+## import data (grower-brand level)
+
 ```{r}
-# import data (grower-brand level)
 rm(list = ls())
 library(readr)
 corn_data_wide = read.csv("~/Downloads/Corn_Grower_Brand_wide.csv")
 corn_data_wide = corn_data_wide[,-c(1)]
 corn_GrowerBrand = data.frame(corn_data_wide)
-# categorize states into regions
+```
+
+### categorize states into regions
+```{r}
 corn_GrowerBrand$"IL" = 0
 corn_GrowerBrand$"IA" = 0
 corn_GrowerBrand$"MI/KY/IN" = 0
@@ -44,7 +49,10 @@ corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "OH", "OH/NorthEastern s
 NEstates = c("CT", "DE", "ME", "MD", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
 corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern sts"] = 1 #checked from Wikipedia
 corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "Unknown", "Unknown"] = 1
+```
 
+## Categorize variables
+```{r}
 corn_gb_region = corn_GrowerBrand[,c("IL","IA","MI/KY/IN","MN/WI","MO/KS/CO","ND/SD","NE","OH/NorthEastern sts","Unknown")]
 corn_gb_lagGNSQ = corn_GrowerBrand[, grepl("GNSQ_FYM", names(corn_GrowerBrand))]
 corn_gb_lagGNSQ_FYM1 = corn_GrowerBrand[, grepl("GNSQ_FYM1", names(corn_GrowerBrand))]
@@ -83,12 +91,20 @@ corn_GrowerBrand$"SumLagGNSQ.DEKALB" = corn_GrowerBrand$GNSQ_FYM1.DEKALB + corn_
 
 corn_gb_sumLagGNSQ = corn_GrowerBrand[, grepl("SumLagGNSQ", names(corn_GrowerBrand))]
 
-########################### Logitstics Regression Models for GNSQ #################################
-## Training and test dataset
+```
+
+
+# Logitstics Regression Models for GNSQ
+
+#### Training and test dataset
+```{r}
 n = dim(corn_data_wide)[1]
 set.seed(1)
 train = sample(n, 0.9*n)
+```
 
+#### Create data frame
+```{r}
 var8 = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat8 = cbind(corn_GrowerBrand[,var8], 
              corn_gb_lagGNSQ_FYM1,
@@ -98,12 +114,11 @@ dat8 = cbind(corn_GrowerBrand[,var8],
              corn_gb_region)
 dat8$purchase = 1
 dat8[dat8$GNSQ_FY == 0, "purchase"] = 0
-dat8 = dat8[,!grepl("GNSQ_FY", names(dat8))]
+```
 
-
-
-# var = c("GRWR_ID", "GNSQ_FY")
-var = c("GRWR_ID")
+#### Fit the logistics model and prediction
+```{r}
+var = c("GRWR_ID", "GNSQ_FY")
 glm.fit = glm(purchase ~., data = dat8[train, -which(names(dat8) == var)], family = binomial)
 glm.pred = predict(glm.fit, dat8[-train, -which(names(dat8) == var)], type = "response")
 dat8$glmpred = 0
@@ -111,7 +126,5 @@ dat8[-train, "glmpred"] = glm.pred
 dat8$pur.pred = 0
 dat8[dat8$glmpred > 0.5, "pur.pred"] = 1
 mean(dat8[-train, "pur.pred"] == dat8[-train, "purchase"])  #0.7502482
-
-
 ```
 
