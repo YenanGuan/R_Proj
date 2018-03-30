@@ -123,6 +123,6 @@ dat8$glmpred = 0
 dat8[-train, "glmpred"] = glm.pred
 dat8$pur.pred = 0
 dat8[dat8$glmpred > 0.5, "pur.pred"] = 1
-mean(dat8[-train, "pur.pred"] == dat8[-train, "purchase"])  #0.7502482
+mean(dat8[-train, "pur.pred"] == dat8[-train, "purchase"])  0.7927489
 ```
 
