@@ -1,0 +1,117 @@
+---
+title: "Trial1_corn_logistic"
+author: "Yenan Guan"
+date: "March 30, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# import data (grower-brand level)
+rm(list = ls())
+library(readr)
+corn_data_wide = read.csv("~/Downloads/Corn_Grower_Brand_wide.csv")
+corn_data_wide = corn_data_wide[,-c(1)]
+corn_GrowerBrand = data.frame(corn_data_wide)
+# categorize states into regions
+corn_GrowerBrand$"IL" = 0
+corn_GrowerBrand$"IA" = 0
+corn_GrowerBrand$"MI/KY/IN" = 0
+corn_GrowerBrand$"MN/WI" = 0
+corn_GrowerBrand$"MO/KS/CO" = 0
+corn_GrowerBrand$"ND/SD" = 0
+corn_GrowerBrand$"NE" = 0
+corn_GrowerBrand$"OH/NorthEastern sts" = 0
+corn_GrowerBrand$"Unknown" = 0
+
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "IL", "IL"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "IA", "IA"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "MI", "MI/KY/IN"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "KY", "MI/KY/IN"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "IN", "MI/KY/IN"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "MN", "MN/WI"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "WI", "MN/WI"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "MO", "MO/KS/CO"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "KS", "MO/KS/CO"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "CO", "MO/KS/CO"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "ND", "ND/SD"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "SD", "ND/SD"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "NE", "NE"] = 1
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "OH", "OH/NorthEastern sts"] = 1
+NEstates = c("CT", "DE", "ME", "MD", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern sts"] = 1 #checked from Wikipedia
+corn_GrowerBrand[corn_GrowerBrand$GRWR_ADDR_ST_PRVNC == "Unknown", "Unknown"] = 1
+
+corn_gb_region = corn_GrowerBrand[,c("IL","IA","MI/KY/IN","MN/WI","MO/KS/CO","ND/SD","NE","OH/NorthEastern sts","Unknown")]
+corn_gb_lagGNSQ = corn_GrowerBrand[, grepl("GNSQ_FYM", names(corn_GrowerBrand))]
+corn_gb_lagGNSQ_FYM1 = corn_GrowerBrand[, grepl("GNSQ_FYM1", names(corn_GrowerBrand))]
+corn_gb_lagSLS = corn_GrowerBrand[, grepl("NET_SLS_AMT_FYM", names(corn_GrowerBrand))]
+corn_gb_lagRADL = corn_GrowerBrand[, grepl("RADL_SCR_FYM", names(corn_GrowerBrand))]
+corn_gb_lagPOP_DESC = corn_GrowerBrand[, grepl("PURCH_PRBLTY_DESC_FYM", names(corn_GrowerBrand))]
+corn_gb_lagPOP = corn_GrowerBrand[, grepl("PURCH_PRBLTY_FYM", names(corn_GrowerBrand))]
+corn_gb_lagRFM = corn_GrowerBrand[, grepl("RFM_SCR_FYM", names(corn_GrowerBrand))]
+corn_gb_lagRFM_RANGE = corn_GrowerBrand[, grepl("RFM_RANGE_FYM", names(corn_GrowerBrand))]
+corn_gb_lagRECENCY = corn_GrowerBrand[, grepl("RECENCY_SCORE_FYM", names(corn_GrowerBrand))]
+corn_gb_lagFREQUENCY = corn_GrowerBrand[, grepl("FREQUENCY_SCORE_FYM", names(corn_GrowerBrand))]
+corn_gb_lagMONETARY = corn_GrowerBrand[, grepl("MONETARY_SCORE_FYM", names(corn_GrowerBrand))]
+corn_gb_lagMONAREA = corn_GrowerBrand[, grepl("MON_AREA_FYM", names(corn_GrowerBrand))]
+corn_gb_lagMONAREA_FYM1 = corn_GrowerBrand[, grepl("MON_AREA_FYM1", names(corn_GrowerBrand))]
+corn_gb_lagOPPOAREA = corn_GrowerBrand[, grepl("OPPO_CROP_AREA_FYM", names(corn_GrowerBrand))]
+
+
+# calculate sum of lag GNSQ
+unique(corn_GrowerBrand$BRND_DESC)
+
+corn_GrowerBrand$"SumLagGNSQ.Asgrow" = corn_GrowerBrand$GNSQ_FYM1.Asgrow + corn_GrowerBrand$GNSQ_FYM2.Asgrow + corn_GrowerBrand$GNSQ_FYM3.Asgrow + corn_GrowerBrand$GNSQ_FYM4.Asgrow + corn_GrowerBrand$GNSQ_FYM5.Asgrow + corn_GrowerBrand$GNSQ_FYM6.Asgrow
+corn_GrowerBrand$"SumLagGNSQ.Channel" = corn_GrowerBrand$GNSQ_FYM1.Channel + corn_GrowerBrand$GNSQ_FYM2.Channel + corn_GrowerBrand$GNSQ_FYM3.Channel + corn_GrowerBrand$GNSQ_FYM4.Channel + corn_GrowerBrand$GNSQ_FYM5.Channel + corn_GrowerBrand$GNSQ_FYM6.Channel
+corn_GrowerBrand$"SumLagGNSQ.REA" = corn_GrowerBrand$GNSQ_FYM1.REA + corn_GrowerBrand$GNSQ_FYM2.REA + corn_GrowerBrand$GNSQ_FYM3.REA + corn_GrowerBrand$GNSQ_FYM4.REA + corn_GrowerBrand$GNSQ_FYM5.REA + corn_GrowerBrand$GNSQ_FYM6.REA
+corn_GrowerBrand$"SumLagGNSQ.LEWIS" = corn_GrowerBrand$GNSQ_FYM1.LEWIS + corn_GrowerBrand$GNSQ_FYM2.LEWIS + corn_GrowerBrand$GNSQ_FYM3.LEWIS + corn_GrowerBrand$GNSQ_FYM4.LEWIS + corn_GrowerBrand$GNSQ_FYM5.LEWIS + corn_GrowerBrand$GNSQ_FYM6.LEWIS
+corn_GrowerBrand$"SumLagGNSQ.GOLD.COUNTRY" = corn_GrowerBrand$GNSQ_FYM1.GOLD.COUNTRY + corn_GrowerBrand$GNSQ_FYM2.GOLD.COUNTRY + corn_GrowerBrand$GNSQ_FYM3.GOLD.COUNTRY + corn_GrowerBrand$GNSQ_FYM4.GOLD.COUNTRY + corn_GrowerBrand$GNSQ_FYM5.GOLD.COUNTRY + corn_GrowerBrand$GNSQ_FYM6.GOLD.COUNTRY
+corn_GrowerBrand$"SumLagGNSQ.FONTANELLE" = corn_GrowerBrand$GNSQ_FYM1.FONTANELLE + corn_GrowerBrand$GNSQ_FYM2.FONTANELLE + corn_GrowerBrand$GNSQ_FYM3.FONTANELLE + corn_GrowerBrand$GNSQ_FYM4.FONTANELLE + corn_GrowerBrand$GNSQ_FYM5.FONTANELLE + corn_GrowerBrand$GNSQ_FYM6.FONTANELLE
+corn_GrowerBrand$"SumLagGNSQ.STEWART" = corn_GrowerBrand$GNSQ_FYM1.STEWART + corn_GrowerBrand$GNSQ_FYM2.STEWART + corn_GrowerBrand$GNSQ_FYM3.STEWART + corn_GrowerBrand$GNSQ_FYM4.STEWART + corn_GrowerBrand$GNSQ_FYM5.STEWART + corn_GrowerBrand$GNSQ_FYM6.STEWART
+corn_GrowerBrand$"SumLagGNSQ.KRUGER" = corn_GrowerBrand$GNSQ_FYM1.KRUGER + corn_GrowerBrand$GNSQ_FYM2.KRUGER + corn_GrowerBrand$GNSQ_FYM3.KRUGER + corn_GrowerBrand$GNSQ_FYM4.KRUGER + corn_GrowerBrand$GNSQ_FYM5.KRUGER + corn_GrowerBrand$GNSQ_FYM6.KRUGER
+corn_GrowerBrand$"SumLagGNSQ.JUNG" = corn_GrowerBrand$GNSQ_FYM1.JUNG + corn_GrowerBrand$GNSQ_FYM2.JUNG + corn_GrowerBrand$GNSQ_FYM3.JUNG + corn_GrowerBrand$GNSQ_FYM4.JUNG + corn_GrowerBrand$GNSQ_FYM5.JUNG + corn_GrowerBrand$GNSQ_FYM6.JUNG
+corn_GrowerBrand$"SumLagGNSQ.TRELAY" = corn_GrowerBrand$GNSQ_FYM1.TRELAY + corn_GrowerBrand$GNSQ_FYM2.TRELAY + corn_GrowerBrand$GNSQ_FYM3.TRELAY + corn_GrowerBrand$GNSQ_FYM4.TRELAY + corn_GrowerBrand$GNSQ_FYM5.TRELAY + corn_GrowerBrand$GNSQ_FYM6.TRELAY
+corn_GrowerBrand$"SumLagGNSQ.HUBNER" = corn_GrowerBrand$GNSQ_FYM1.HUBNER + corn_GrowerBrand$GNSQ_FYM2.HUBNER + corn_GrowerBrand$GNSQ_FYM3.HUBNER + corn_GrowerBrand$GNSQ_FYM4.HUBNER + corn_GrowerBrand$GNSQ_FYM5.HUBNER + corn_GrowerBrand$GNSQ_FYM6.HUBNER
+corn_GrowerBrand$"SumLagGNSQ.STONE" = corn_GrowerBrand$GNSQ_FYM1.STONE + corn_GrowerBrand$GNSQ_FYM2.STONE + corn_GrowerBrand$GNSQ_FYM3.STONE + corn_GrowerBrand$GNSQ_FYM4.STONE + corn_GrowerBrand$GNSQ_FYM5.STONE + corn_GrowerBrand$GNSQ_FYM6.STONE
+corn_GrowerBrand$"SumLagGNSQ.SPECIALTY" = corn_GrowerBrand$GNSQ_FYM1.SPECIALTY + corn_GrowerBrand$GNSQ_FYM2.SPECIALTY + corn_GrowerBrand$GNSQ_FYM3.SPECIALTY + corn_GrowerBrand$GNSQ_FYM4.SPECIALTY + corn_GrowerBrand$GNSQ_FYM5.SPECIALTY + corn_GrowerBrand$GNSQ_FYM6.SPECIALTY
+corn_GrowerBrand$"SumLagGNSQ.HERITAGE" = corn_GrowerBrand$GNSQ_FYM1.HERITAGE + corn_GrowerBrand$GNSQ_FYM2.HERITAGE + corn_GrowerBrand$GNSQ_FYM3.HERITAGE + corn_GrowerBrand$GNSQ_FYM4.HERITAGE + corn_GrowerBrand$GNSQ_FYM5.HERITAGE + corn_GrowerBrand$GNSQ_FYM6.HERITAGE
+corn_GrowerBrand$"SumLagGNSQ.DEKALB" = corn_GrowerBrand$GNSQ_FYM1.DEKALB + corn_GrowerBrand$GNSQ_FYM2.DEKALB + corn_GrowerBrand$GNSQ_FYM3.DEKALB + corn_GrowerBrand$GNSQ_FYM4.DEKALB + corn_GrowerBrand$GNSQ_FYM5.DEKALB + corn_GrowerBrand$GNSQ_FYM6.DEKALB
+
+corn_gb_sumLagGNSQ = corn_GrowerBrand[, grepl("SumLagGNSQ", names(corn_GrowerBrand))]
+
+########################### Logitstics Regression Models for GNSQ #################################
+## Training and test dataset
+n = dim(corn_data_wide)[1]
+set.seed(1)
+train = sample(n, 0.9*n)
+
+var8 = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
+dat8 = cbind(corn_GrowerBrand[,var8], 
+             corn_gb_lagGNSQ_FYM1,
+             corn_gb_lagMONAREA_FYM1,
+             corn_gb_lagOPPOAREA,
+             corn_gb_sumLagGNSQ,
+             corn_gb_region)
+dat8$purchase = 1
+dat8[dat8$GNSQ_FY == 0, "purchase"] = 0
+dat8 = dat8[,!grepl("GNSQ_FY", names(dat8))]
+
+
+
+# var = c("GRWR_ID", "GNSQ_FY")
+var = c("GRWR_ID")
+glm.fit = glm(purchase ~., data = dat8[train, -which(names(dat8) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat8[-train, -which(names(dat8) == var)], type = "response")
+dat8$glmpred = 0
+dat8[-train, "glmpred"] = glm.pred
+dat8$pur.pred = 0
+dat8[dat8$glmpred > 0.5, "pur.pred"] = 1
+mean(dat8[-train, "pur.pred"] == dat8[-train, "purchase"])  #0.7502482
+
+
+```
+
