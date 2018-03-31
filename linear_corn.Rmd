@@ -28,7 +28,7 @@ corn.data = corn.data[, !names(corn.data) %in% c("MON_AREA_FYM2", "MON_AREA_FYM3
 
 delete GNSQ_sum
 ```{r}
-corn.data = corn.data[, !names(corn.data) %in% c("GNSQ_FYM1_sum", "GNSQ_FYM2_sum", "GNSQ_FYM3_sum", "GNSQ_FYM4_sum","GNSQ_FYM5_sum", "GNSQ_FYM6_sum")]
+corn.data = corn.data[, !names(corn.data) %in% c("GNSQ_TOTAL", "GNSQ_FYM1_sum", "GNSQ_FYM2_sum", "GNSQ_FYM3_sum", "GNSQ_FYM4_sum","GNSQ_FYM5_sum", "GNSQ_FYM6_sum")]
 ```
 
 delete sales amount in dollar value
@@ -45,7 +45,7 @@ corn.data$"MN/WI" = 0
 corn.data$"MO/KS/CO" = 0
 corn.data$"ND/SD" = 0
 corn.data$"NE" = 0
-corn.data$"OH/NorthEastern sts" = 0
+corn.data$"OH/NorthEastern" = 0
 corn.data$"Unknown" = 0
 
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "IL", "IL"] = 1
@@ -61,9 +61,9 @@ corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "CO", "MO/KS/CO"] = 1
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "ND", "ND/SD"] = 1
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "SD", "ND/SD"] = 1
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "NE", "NE"] = 1
-corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "OH", "OH/NorthEastern sts"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "OH", "OH/NorthEastern"] = 1
 NEstates = c("CT", "DE", "ME", "MD", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
-corn.data[corn.data$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern sts"] = 1 #checked from Wikipedia
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern"] = 1 #checked from Wikipedia
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "Unknown", "Unknown"] = 1
 
 corn.data = corn.data[, !grepl("GRWR_ADDR_ST_PRVNC", names(corn.data))]
@@ -83,7 +83,9 @@ colnames(corn.data)[names(corn.data) == "GNSQ_FY16"] = "GNSQ_FYM1"
 colnames(corn.data)[names(corn.data) == "GNSQ_FY16_other"] = "GNSQ_FYM1_other"
 ```
 
-
+## change the column order
 ```{r}
-names(corn.data)
+# corn.data = cbind(corn.data[c("GRWR_ID", "CROP_NM", "BRND_DESC")], corn.data[ , -which(names(corn.data) %in% c("GRWR_ID", "CROP_NM", "BRND_DESC"))])
+
+corn.data = corn.data[, cbind("GRWR_ID", "CROP_NM", "BRND_DESC", "GNSQ_FY", "GNSQ_FYM1", "sumLagGNSQ", "GNSQ_FYM1_other", "sumLagGNSQ_other", "MON_AREA_FY", "MON_AREA_FYM1", "OPPO_CROP_AREA_FY", "OPPO_CROP_AREA_FYM1", "RECENCY_SCORE_FY", "RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FY", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FY", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FY", "PURCH_PRBLTY_FYM1", "IL", "IA", "MI/KY/IN", "MN/WI", "MO/KS/CO", "ND/SD", "NE", "OH/NorthEastern", "Unknown" )]
 ```
