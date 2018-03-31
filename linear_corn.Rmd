@@ -67,9 +67,17 @@ corn.data[corn.data$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern sts"] = 1
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "Unknown", "Unknown"] = 1
 ```
 
+## Generate other new variables - sum of FYM2-FYM6 for the certain brand and other brands
+```{r}
+# calculate sum of GNSQ_FYM2-FYM6
+corn.data$sumLagGNSQ_other = rowSums(corn.data[,grepl("GNSQ_FYM.*other",names(corn.data))])
+corn.data = corn.data[, !grepl("GNSQ_FYM.*other",names(corn.data))]
 
-## Generate and categorize variables
+corn.data$sumLagGNSQ = rowSums(corn.data[,grepl("GNSQ_FYM.*",names(corn.data))])
+corn.data = corn.data[, !grepl("GNSQ_FYM.*",names(corn.data))]
+```
+
+
 ```{r}
 names(corn.data)
-summary(corn.data)
 ```
