@@ -1,0 +1,35 @@
+---
+title: "linear_corn(soy)"
+author: "Yenan Guan"
+date: "3/31/2018"
+output: html_document
+---
+
+## Import File
+```{r}
+rm(list = ls())
+library(readr)
+soy.data <- read_csv("~/Downloads/Flatfile_Soy_3.30.csv")
+soy.data = data.frame(soy.data)
+names(soy.data)
+```
+
+delete the redundant variables
+```{r}
+soy.data = soy.data[, !names(soy.data) %in% c("X1", "GRWR_ADDR_CITY_NM", "GRWR_ADDR_POSTL_CD")]
+```
+
+delete the KPIs in categorical forms and delete RADL&RFM
+```{r}
+soy.data = soy.data[, !names(soy.data) %in% c("RADL_SCR_FY", "RADL_SCR_FYM1", "PURCH_PRBLTY_DESC_FY", "PURCH_PRBLTY_DESC_FYM1", "RFM_SCR_FY", "RFM_RANGE_FY", "RFM_SCR_FYM1", "RFM_RANGE_FYM1")]
+
+soy.data = soy.data[, !names(soy.data) %in% c("MON_AREA_FYM2", "MON_AREA_FYM3", "MON_AREA_FYM4", "MON_AREA_FYM5", "MON_AREA_FYM6", "MON_AREA_TOTAL", "OPPO_CROP_AREA_TOTAL")]
+```
+## Region
+
+
+## Generate and categorize variables
+```{r}
+names(soy.data)
+summary(soy.data)
+```
