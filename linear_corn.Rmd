@@ -65,16 +65,22 @@ corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "OH", "OH/NorthEastern sts"] = 1
 NEstates = c("CT", "DE", "ME", "MD", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern sts"] = 1 #checked from Wikipedia
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "Unknown", "Unknown"] = 1
+
+corn.data = corn.data[, !grepl("GRWR_ADDR_ST_PRVNC", names(corn.data))]
 ```
 
 ## Generate other new variables - sum of FYM2-FYM6 for the certain brand and other brands
 ```{r}
 # calculate sum of GNSQ_FYM2-FYM6
+colnames(corn.data)[names(corn.data) == "GNSQ_FYM1_other"] = "GNSQ_FY16_other"
 corn.data$sumLagGNSQ_other = rowSums(corn.data[,grepl("GNSQ_FYM.*other",names(corn.data))])
-corn.data = corn.data[, !grepl("GNSQ_FYM.*other",names(corn.data))]
+corn.data = corn.data[, !grepl("GNSQ_FYM.*_other",names(corn.data))]
 
+colnames(corn.data)[names(corn.data) == "GNSQ_FYM1"] = "GNSQ_FY16"
 corn.data$sumLagGNSQ = rowSums(corn.data[,grepl("GNSQ_FYM.*",names(corn.data))])
 corn.data = corn.data[, !grepl("GNSQ_FYM.*",names(corn.data))]
+colnames(corn.data)[names(corn.data) == "GNSQ_FY16"] = "GNSQ_FYM1"
+colnames(corn.data)[names(corn.data) == "GNSQ_FY16_other"] = "GNSQ_FYM1_other"
 ```
 
 
