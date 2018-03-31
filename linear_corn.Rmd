@@ -1,0 +1,69 @@
+---
+title: "linear_corn(corn)"
+author: "Yenan Guan"
+date: "3/31/2018"
+output: html_document
+---
+
+## Import File
+```{r}
+rm(list = ls())
+library(readr)
+corn.data <- read_csv("~/Downloads/Flatfile_Corn_3.30.csv")
+corn.data = data.frame(corn.data)
+names(corn.data)
+```
+
+delete the redundant variables
+```{r}
+corn.data = corn.data[, !names(corn.data) %in% c("X1", "GRWR_ADDR_CITY_NM", "GRWR_ADDR_POSTL_CD")]
+```
+
+delete the KPIs in categorical forms and delete RADL&RFM
+```{r}
+corn.data = corn.data[, !names(corn.data) %in% c("RADL_SCR_FY", "RADL_SCR_FYM1", "PURCH_PRBLTY_DESC_FY", "PURCH_PRBLTY_DESC_FYM1", "RFM_SCR_FY", "RFM_RANGE_FY", "RFM_SCR_FYM1", "RFM_RANGE_FYM1")]
+
+corn.data = corn.data[, !names(corn.data) %in% c("MON_AREA_FYM2", "MON_AREA_FYM3", "MON_AREA_FYM4", "MON_AREA_FYM5", "MON_AREA_FYM6", "MON_AREA_TOTAL", "OPPO_CROP_AREA_TOTAL", "MON_AREA_FYM1_sum", "MON_AREA_FYM2_sum", "MON_AREA_FYM3_sum", "MON_AREA_FYM4_sum", "MON_AREA_FYM5_sum", "MON_AREA_FYM6_sum", "TOTAL_AREA_FYM1")]
+```
+
+delete GNSQ_sum
+```{r}
+corn.data = corn.data[, !names(corn.data) %in% c("GNSQ_FYM1_sum", "GNSQ_FYM2_sum", "GNSQ_FYM3_sum", "GNSQ_FYM4_sum","GNSQ_FYM5_sum", "GNSQ_FYM6_sum")]
+```
+
+## Region
+```{r}
+corn.data$"IL" = 0
+corn.data$"IA" = 0
+corn.data$"MI/KY/IN" = 0
+corn.data$"MN/WI" = 0
+corn.data$"MO/KS/CO" = 0
+corn.data$"ND/SD" = 0
+corn.data$"NE" = 0
+corn.data$"OH/NorthEastern sts" = 0
+corn.data$"Unknown" = 0
+
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "IL", "IL"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "IA", "IA"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "MI", "MI/KY/IN"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "KY", "MI/KY/IN"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "IN", "MI/KY/IN"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "MN", "MN/WI"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "WI", "MN/WI"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "MO", "MO/KS/CO"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "KS", "MO/KS/CO"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "CO", "MO/KS/CO"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "ND", "ND/SD"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "SD", "ND/SD"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "NE", "NE"] = 1
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "OH", "OH/NorthEastern sts"] = 1
+NEstates = c("CT", "DE", "ME", "MD", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern sts"] = 1 #checked from Wikipedia
+corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "Unknown", "Unknown"] = 1
+```
+
+## Generate and categorize variables
+```{r}
+names(corn.data)
+summary(corn.data)
+```
