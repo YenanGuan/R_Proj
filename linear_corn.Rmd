@@ -73,11 +73,11 @@ corn.data = corn.data[, !grepl("GRWR_ADDR_ST_PRVNC", names(corn.data))]
 ```{r}
 # calculate sum of GNSQ_FYM2-FYM6
 colnames(corn.data)[names(corn.data) == "GNSQ_FYM1_other"] = "GNSQ_FY16_other"
-corn.data$sumLagGNSQ_other = rowSums(corn.data[,grepl("GNSQ_FYM.*other",names(corn.data))])
+corn.data$GNSQ_sumLag_other = rowSums(corn.data[,grepl("GNSQ_FYM.*other",names(corn.data))])
 corn.data = corn.data[, !grepl("GNSQ_FYM.*_other",names(corn.data))]
 
 colnames(corn.data)[names(corn.data) == "GNSQ_FYM1"] = "GNSQ_FY16"
-corn.data$sumLagGNSQ = rowSums(corn.data[,grepl("GNSQ_FYM.*",names(corn.data))])
+corn.data$GNSQ_sumLag = rowSums(corn.data[,grepl("GNSQ_FYM.*",names(corn.data))])
 corn.data = corn.data[, !grepl("GNSQ_FYM.*",names(corn.data))]
 colnames(corn.data)[names(corn.data) == "GNSQ_FY16"] = "GNSQ_FYM1"
 colnames(corn.data)[names(corn.data) == "GNSQ_FY16_other"] = "GNSQ_FYM1_other"
@@ -87,5 +87,56 @@ colnames(corn.data)[names(corn.data) == "GNSQ_FY16_other"] = "GNSQ_FYM1_other"
 ```{r}
 # corn.data = cbind(corn.data[c("GRWR_ID", "CROP_NM", "BRND_DESC")], corn.data[ , -which(names(corn.data) %in% c("GRWR_ID", "CROP_NM", "BRND_DESC"))])
 
-corn.data = corn.data[, cbind("GRWR_ID", "CROP_NM", "BRND_DESC", "GNSQ_FY", "GNSQ_FYM1", "sumLagGNSQ", "GNSQ_FYM1_other", "sumLagGNSQ_other", "MON_AREA_FY", "MON_AREA_FYM1", "OPPO_CROP_AREA_FY", "OPPO_CROP_AREA_FYM1", "RECENCY_SCORE_FY", "RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FY", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FY", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FY", "PURCH_PRBLTY_FYM1", "IL", "IA", "MI/KY/IN", "MN/WI", "MO/KS/CO", "ND/SD", "NE", "OH/NorthEastern", "Unknown" )]
+corn.data = corn.data[, cbind("GRWR_ID", "CROP_NM", "BRND_DESC", "GNSQ_FY", "GNSQ_FYM1", "GNSQ_sumLag", "GNSQ_FYM1_other", "GNSQ_sumLag_other", "MON_AREA_FY", "MON_AREA_FYM1", "OPPO_CROP_AREA_FY", "OPPO_CROP_AREA_FYM1", "RECENCY_SCORE_FY", "RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FY", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FY", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FY", "PURCH_PRBLTY_FYM1", "IL", "IA", "MI/KY/IN", "MN/WI", "MO/KS/CO", "ND/SD", "NE", "OH/NorthEastern", "Unknown" )]
+names(corn.data)
 ```
+
+## Categorize variables
+```{r}
+corn_region = corn.data[,c("IL","IA","MI/KY/IN","MN/WI","MO/KS/CO","ND/SD","NE","OH/NorthEastern","Unknown")]
+corn_RFM_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1")]
+corn_AREA_FYM1 = corn.data[, c("MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1")]
+corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")]
+```
+
+# Regression: linear + logit
+prep
+```{r}
+n = dim(corn.data)[1]
+set.seed(1)
+train = sample(n, 0.9*n)
+```
+
+### dat1
+```{r}
+attach(corn.data)
+var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
+dat1 = cbind(corn.data[,var], 
+             GNSQ_FYM1,
+             GNSQ_sumLag,
+             GNSQ_FYM1_other,
+             GNSQ_sumLag_other,
+             corn_region,
+             corn_AREA_FYM1,
+             corn_KPI_FYM1)
+
+lm.fit=lm(GNSQ_FY~., data = dat1[train,-which(names(dat1) == "GRWR_ID")])
+lm.pred = predict(lm.fit, newdata = dat1[-train,-which(names(dat1) == "GRWR_ID")])
+
+var = c("GRWR_ID", "GNSQ_FY")
+dat1$purchase = 1
+dat1[dat1$GNSQ_FY == 0, "purchase"] = 0
+glm.fit = glm(purchase ~., data = dat1[train, -which(names(dat1) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat1[-train, -which(names(dat1) == var)], type = "response")
+dat1$glmpred = 0
+dat1[-train, "glmpred"] = glm.pred
+dat1$pur.pred = 0
+dat1[dat1$glmpred > 0.5, "pur.pred"] = 1
+mean(dat1[-train, "pur.pred"] == dat1[-train, "purchase"])
+```
+
+
+
+
+
+
