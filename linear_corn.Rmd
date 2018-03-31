@@ -31,6 +31,11 @@ delete GNSQ_sum
 corn.data = corn.data[, !names(corn.data) %in% c("GNSQ_FYM1_sum", "GNSQ_FYM2_sum", "GNSQ_FYM3_sum", "GNSQ_FYM4_sum","GNSQ_FYM5_sum", "GNSQ_FYM6_sum")]
 ```
 
+delete sales amount in dollar value
+```{r}
+corn.data = corn.data[, !grepl("NET_SLS_AMT_FY.*", names(corn.data))]
+```
+
 ## Region
 ```{r}
 corn.data$"IL" = 0
@@ -61,6 +66,7 @@ NEstates = c("CT", "DE", "ME", "MD", "MA", "NH", "NJ", "NY", "PA", "RI", "VT")
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC %in% NEstates, "OH/NorthEastern sts"] = 1 #checked from Wikipedia
 corn.data[corn.data$GRWR_ADDR_ST_PRVNC == "Unknown", "Unknown"] = 1
 ```
+
 
 ## Generate and categorize variables
 ```{r}
