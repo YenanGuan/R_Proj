@@ -81,8 +81,6 @@ confusionMatrix(data = as.factor(dat4[-train, "pur_pred"]), reference = as.facto
 ```
 Confusion Matrix and Statistics
 
-           | Reference  
----------- | ------------- 
 Prediction |   0   |   1
 ---------- | ----- | ----
          0 | 18169 | 2928
