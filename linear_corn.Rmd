@@ -114,7 +114,7 @@ Model | out-sample MSE | out-sample R2 | Churn_pred accuracy
 **4** |  **3029.415**  | **0.582372**  |   **0.8273771**
   5   |    3040.738    |   0.5797378   |     0.7855771
 
-## preparations: set seed & specify training and test rows
+### preparations: set seed & specify training and test rows
 ```{r}
 n = dim(corn.data)[1]
 set.seed(1)
