@@ -111,7 +111,7 @@ Model | out-sample MSE | out-sample R2 | Churn_pred accuracy
   1   |    3029.539    |   0.5826021   |     0.8273098
   2   |    3037.443    |   0.5816021   |     0.8196638
   3   |    3083.987    |   0.577036    |     0.8269056
-  4*  |    3029.415    |   0.582372    |     0.8273771
+**4   |    3029.415    |   0.582372    |     0.8273771**
   5   |    3040.738    |   0.5797378   |     0.7855771
 
 ## preparations: set seed & specify training and test rows
@@ -123,7 +123,7 @@ train = sample(n, 0.9*n)
 
 ## dat1
 ### Data frame: All variables
-```{r}
+```{r message = FALSE}
 attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat1 = cbind(corn.data[,var], 
@@ -190,7 +190,7 @@ mean(dat1[-train, "pur_pred"] == dat1[-train, "purchase"])
 
 ## dat2
 ### Data frame: All variables but POP
-```{r}
+```{r message = FALSE}
 attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat2 = cbind(corn.data[,var], 
@@ -257,7 +257,7 @@ mean(dat2[-train, "pur_pred"] == dat2[-train, "purchase"])
 
 ## dat3
 ### Data frame: one lagged year sales quantity + region + area + KPI
-```{r}
+```{r message = FALSE}
 attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat3 = cbind(corn.data[,var], 
@@ -322,7 +322,7 @@ mean(dat3[-train, "pur_pred"] == dat3[-train, "purchase"])
 
 ## dat4
 ### Data frame: all brand-specific sales quantity + region + area + KPI
-```{r}
+```{r message = FALSE}
 attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat4 = cbind(corn.data[,var], 
@@ -387,7 +387,7 @@ mean(dat4[-train, "pur_pred"] == dat4[-train, "purchase"])
 
 ## dat5
 ### Data frame: no KPIs
-```{r}
+```{r message = FALSE}
 attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat5 = cbind(corn.data[,var], 
