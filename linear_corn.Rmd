@@ -100,8 +100,8 @@ corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MON
 ```
 
 # Regression: linear + logit
--- Model 1: All variables
--- Model 2: All variables but POP
+* Model 1: All variables
+* Model 2: All variables but POP
 -- Model 3: one lagged year sales quantity + region + area + KPI
 -- Model 4: all brand-specific sales quantity + region + area + KPI
 -- Model 5: all sales quantity, no KPIs
