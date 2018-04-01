@@ -81,11 +81,10 @@ confusionMatrix(data = as.factor(dat4[-train, "pur_pred"]), reference = as.facto
 ```
 Confusion Matrix and Statistics
 
-Prediction |   0   |   1
----------- | ----- | -----
-     0     | 18169 | 2928
----------- | ----- | -----
-     1     |  2197 | 6395
+          Reference
+Prediction     0     1
+         0 18169  2928
+         1  2197  6395
                                          
                Accuracy : 0.8274         
                  95% CI : (0.823, 0.8317)
@@ -104,7 +103,7 @@ Prediction |   0   |   1
    Detection Prevalence : 0.7106         
       Balanced Accuracy : 0.7890         
                                          
-       'Positive' Class : 0    
+       'Positive' Class : 0           
        
 #### Analysis through a typical grower
 ```{r}
