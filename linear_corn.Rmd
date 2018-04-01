@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ## Import File
-```{r}
+```{r message = FALSE}
 rm(list = ls())
 library(readr)
 corn.data <- read_csv("~/Downloads/Flatfile_Corn_3.30.csv")
