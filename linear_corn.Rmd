@@ -100,7 +100,12 @@ corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MON
 ```
 
 # Regression: linear + logit
-prep
+Model 1: All variables
+Model 2: All variables but POP
+Model 3: one lagged year sales quantity + region + area + KPI
+Model 4: all brand-specific sales quantity + region + area + KPI
+Model 5: all sales quantity, no KPIs
+## preparations: set seed & specify training and test rows
 ```{r}
 n = dim(corn.data)[1]
 set.seed(1)
@@ -381,8 +386,7 @@ dat5 = cbind(corn.data[,var],
              GNSQ_sumLag,
              GNSQ_FYM1_other,
              GNSQ_sumLag_other,
-             corn_region
-             )
+             corn_region)
 ```
 
 ### Sales Quantity Prediction - Linear Regression
