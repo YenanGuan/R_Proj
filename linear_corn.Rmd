@@ -102,9 +102,15 @@ corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MON
 # Regression: linear + logit
 * Model 1: All variables
 * Model 2: All variables but POP
--- Model 3: one lagged year sales quantity + region + area + KPI
--- Model 4: all brand-specific sales quantity + region + area + KPI
--- Model 5: all sales quantity, no KPIs
+* Model 3: one lagged year sales quantity + region + area + KPI
+* Model 4: all brand-specific sales quantity + region + area + KPI
+* Model 5: all sales quantity, no KPIs
+
+Model | out-sample MSE | out-sample R2 | Churn_pred accuracy
+----- | -------------- | ------------- | -------------------
+  1   |    3029.539    |   0.5826021   |     0.8273098
+  2   |    3037.443    |   0.5816021   |     0.8196638
+
 ## preparations: set seed & specify training and test rows
 ```{r}
 n = dim(corn.data)[1]
