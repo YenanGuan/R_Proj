@@ -141,23 +141,25 @@ r.squared
 
 dat.grower = dat1[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
 dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
-mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) # 2947.681
+mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) 
 SST = sum((dat.grower$GNSQ_FY - mean(dat.grower$GNSQ_FY))^2)
 SSE = sum((dat.grower$lm_pred - mean(dat.grower$GNSQ_FY))^2)
 r.squared = SSE/SST
-r.squared # 0.5810602
-
+r.squared 
+# out-sample (non-aggregated)
+# MSE: 3029.539
+# R-Squared: 0.5826021
 
 var = c("GRWR_ID", "GNSQ_FY")
 dat1$purchase = 1
 dat1[dat1$GNSQ_FY == 0, "purchase"] = 0
 glm.fit = glm(purchase ~., data = dat1[train, -which(names(dat1) == var)], family = binomial)
 glm.pred = predict(glm.fit, dat1[-train, -which(names(dat1) == var)], type = "response")
-dat1$glmpred = 0
-dat1[-train, "glmpred"] = glm.pred
-dat1$pur.pred = 0
-dat1[dat1$glmpred > 0.5, "pur.pred"] = 1
-mean(dat1[-train, "pur.pred"] == dat1[-train, "purchase"])
+dat1$glm_pred = 0
+dat1[-train, "glm_pred"] = glm.pred
+dat1$pur_pred = 0
+dat1[dat1$glmpred > 0.5, "pur_pred"] = 1
+mean(dat1[-train, "pur_pred"] == dat1[-train, "purchase"]) # 0.685978
 ```
 
 
