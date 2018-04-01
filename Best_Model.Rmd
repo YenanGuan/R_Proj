@@ -1,0 +1,127 @@
+---
+title: "BestModel"
+author: "Yenan Guan"
+date: "4/1/2018"
+output: html_document
+---
+
+## dat4
+### Data frame: all brand-specific sales quantity + region + area + KPI
+```{r message = FALSE}
+n = dim(corn.data)[1]
+set.seed(1)
+train = sample(n, 0.9*n)
+attach(corn.data)
+var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
+dat4 = cbind(corn.data[,var], 
+             GNSQ_FYM1,
+             GNSQ_sumLag,
+             corn_region,
+             corn_AREA_FYM1,
+             corn_KPI_FYM1)
+```
+
+### Sales Quantity Prediction - Linear Regression
+```{r}
+lm.fit=lm(GNSQ_FY~., data = dat4[train,-which(names(dat4) == "GRWR_ID")])
+lm.pred = predict(lm.fit, newdata = dat4[-train,-which(names(dat4) == "GRWR_ID")])
+summary(lm.fit)$r.squared # in-sample R2
+mean(lm.fit$residuals^2) # in-sample MSE
+```
+* in-sample
+    + MSE: 2655.72
+    + R-Squared: 0.5886434
+
+```{r}
+dat4$lm_pred = 0
+dat4[-train, "lm_pred"] = lm.pred
+mean((dat4[-train, "lm_pred"] - dat4[-train, "GNSQ_FY"])^2) # out-sample MSE, non-aggr
+SST = sum((dat4[-train, "GNSQ_FY"] - mean(dat4[-train, "GNSQ_FY"]))^2)
+SSE = sum((dat4[-train, "lm_pred"] - mean(dat4[-train, "GNSQ_FY"]))^2)
+r.squared = SSE/SST # out-sample R2, non-aggr
+r.squared 
+```
+* out-sample (non-aggregated)
+    + MSE: 2947.72
+    + R-Squared: 0.5810378
+
+```{r}
+dat.grower = dat4[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
+dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
+mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) # out-sample MSE, aggr
+SST = sum((dat.grower$GNSQ_FY - mean(dat.grower$GNSQ_FY))^2)
+SSE = sum((dat.grower$lm_pred - mean(dat.grower$GNSQ_FY))^2)
+r.squared = SSE/SST # out-sample R2, aggr
+r.squared 
+```
+* out-sample (aggregated)
+    + MSE: 3029.415
+    + R-Squared: 0.582372
+
+### Churn Prediction - Logistics Regression
+```{r}
+var = c("GRWR_ID", "GNSQ_FY")
+dat4$purchase = 1
+dat4[dat4$GNSQ_FY == 0, "purchase"] = 0
+glm.fit = glm(purchase ~., data = dat4[train, -which(names(dat4) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat4[-train, -which(names(dat4) == var)], type = "response")
+dat4$glm_pred = 0
+dat4[-train, "glm_pred"] = glm.pred
+dat4$pur_pred = 0
+dat4[dat4$glm_pred > 0.5, "pur_pred"] = 1
+mean(dat4[-train, "pur_pred"] == dat4[-train, "purchase"]) 
+```
+* Threshold: 0.5 - Prediction accuracy: 0.8273771
+
+#### Confusion Matrix
+```{r}
+library(caret)
+library(e1071)
+confusionMatrix(data = as.factor(dat4[-train, "pur_pred"]), reference = as.factor(dat4[-train, "purchase"]))
+```
+Confusion Matrix and Statistics
+
+           | Reference  
+---------- | ------------- 
+Prediction |   0   |   1
+---------- | ----- | ----
+         0 | 18169 | 2928
+         1 |  2197 | 6395
+                                         
+               Accuracy : 0.8274         
+                 95% CI : (0.823, 0.8317)
+    No Information Rate : 0.686          
+    P-Value [Acc > NIR] : < 2.2e-16      
+                                         
+                  Kappa : 0.5906         
+ Mcnemar's Test P-Value : < 2.2e-16      
+                                         
+            Sensitivity : 0.8921         
+            Specificity : 0.6859         
+         Pos Pred Value : 0.8612         
+         Neg Pred Value : 0.7443         
+             Prevalence : 0.6860         
+         Detection Rate : 0.6120         
+   Detection Prevalence : 0.7106         
+      Balanced Accuracy : 0.7890         
+                                         
+       'Positive' Class : 0    
+       
+#### Analysis through a typical grower
+```{r}
+
+
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
