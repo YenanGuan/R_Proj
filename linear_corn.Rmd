@@ -128,7 +128,12 @@ lm.fit=lm(GNSQ_FY~., data = dat1[train,-which(names(dat1) == "GRWR_ID")])
 lm.pred = predict(lm.fit, newdata = dat1[-train,-which(names(dat1) == "GRWR_ID")])
 summary(lm.fit)$r.squared # in-sample R2
 mean(lm.fit$residuals^2) # in-sample MSE
+```
+* in-sample
+    + MSE: 2655.674
+    + R-Squared: 0.5886505
 
+```{r}
 dat1$lm_pred = 0
 dat1[-train, "lm_pred"] = lm.pred
 mean((dat1[-train, "lm_pred"] - dat1[-train, "GNSQ_FY"])^2)
@@ -136,7 +141,12 @@ SST = sum((dat1[-train, "GNSQ_FY"] - mean(dat1[-train, "GNSQ_FY"]))^2)
 SSE = sum((dat1[-train, "lm_pred"] - mean(dat1[-train, "GNSQ_FY"]))^2)
 r.squared = SSE/SST # out-sample R2, non-aggr
 r.squared # out-sample MSE, non-aggr
+```
+* out-sample (non-aggregated)
+    + MSE: 2947.681
+    + R-Squared: 0.5810602
 
+```{r}
 dat.grower = dat1[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
 dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
 mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) 
@@ -145,12 +155,6 @@ SSE = sum((dat.grower$lm_pred - mean(dat.grower$GNSQ_FY))^2)
 r.squared = SSE/SST # out-sample R2, aggr
 r.squared # out-sample MSE, aggr
 ```
-* in-sample
-    + MSE: 2655.674
-    + R-Squared: 0.5886505
-* out-sample (non-aggregated)
-    + MSE: 2947.681
-    + R-Squared: 0.5810602
 * out-sample (aggregated)
     + MSE: 3029.539
     + R-Squared: 0.5826021
