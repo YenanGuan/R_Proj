@@ -239,3 +239,200 @@ mean(dat2[-train, "pur_pred"] == dat2[-train, "purchase"])
 ```
 * Threshold: 0.5 - Prediction accuracy: 0.8273771
 
+## dat3
+### Data frame: All variables
+```{r}
+attach(corn.data)
+var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
+dat3 = cbind(corn.data[,var], 
+             GNSQ_FYM1,
+             GNSQ_FYM1_other,
+             corn_region,
+             corn_AREA_FYM1,
+             corn_KPI_FYM1)
+```
+
+### Sales Quantity Prediction - Linear Regression
+```{r}
+lm.fit=lm(GNSQ_FY~., data = dat3[train,-which(names(dat3) == "GRWR_ID")])
+lm.pred = predict(lm.fit, newdata = dat3[-train,-which(names(dat3) == "GRWR_ID")])
+summary(lm.fit)$r.squared # in-sample R2
+mean(lm.fit$residuals^2) # in-sample MSE
+```
+* in-sample
+    + MSE: 2701.153
+    + R-Squared: 0.5816061
+
+```{r}
+dat3$lm_pred = 0
+dat3[-train, "lm_pred"] = lm.pred
+mean((dat3[-train, "lm_pred"] - dat3[-train, "GNSQ_FY"])^2) # out-sample MSE, non-aggr
+SST = sum((dat3[-train, "GNSQ_FY"] - mean(dat3[-train, "GNSQ_FY"]))^2)
+SSE = sum((dat3[-train, "lm_pred"] - mean(dat3[-train, "GNSQ_FY"]))^2)
+r.squared = SSE/SST # out-sample R2, non-aggr
+r.squared 
+```
+* out-sample (non-aggregated)
+    + MSE: 3000.961
+    + R-Squared: 0.5753138
+
+```{r}
+dat.grower = dat3[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
+dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
+mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) # out-sample MSE, aggr
+SST = sum((dat.grower$GNSQ_FY - mean(dat.grower$GNSQ_FY))^2)
+SSE = sum((dat.grower$lm_pred - mean(dat.grower$GNSQ_FY))^2)
+r.squared = SSE/SST # out-sample R2, aggr
+r.squared 
+```
+* out-sample (aggregated)
+    + MSE: 3083.987
+    + R-Squared: 0.577036
+
+### Churn Prediction - Logistics Regression
+```{r}
+var = c("GRWR_ID", "GNSQ_FY")
+dat3$purchase = 1
+dat3[dat3$GNSQ_FY == 0, "purchase"] = 0
+glm.fit = glm(purchase ~., data = dat3[train, -which(names(dat3) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat3[-train, -which(names(dat3) == var)], type = "response")
+dat3$glm_pred = 0
+dat3[-train, "glm_pred"] = glm.pred
+dat3$pur_pred = 0
+dat3[dat3$glm_pred > 0.5, "pur_pred"] = 1
+mean(dat3[-train, "pur_pred"] == dat3[-train, "purchase"]) 
+```
+* Threshold: 0.5 - Prediction accuracy: 0.8269056
+
+## dat4
+### Data frame: All variables but POP
+```{r}
+attach(corn.data)
+var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
+dat4 = cbind(corn.data[,var], 
+             GNSQ_FYM1,
+             GNSQ_sumLag,
+             GNSQ_FYM1_other,
+             GNSQ_sumLag_other,
+             corn_region,
+             corn_AREA_FYM1,
+             corn_RFM_FYM1)
+```
+
+### Sales Quantity Prediction - Linear Regression
+```{r}
+lm.fit=lm(GNSQ_FY~., data = dat4[train,-which(names(dat4) == "GRWR_ID")])
+lm.pred = predict(lm.fit, newdata = dat4[-train,-which(names(dat4) == "GRWR_ID")])
+summary(lm.fit)$r.squared # in-sample R2
+mean(lm.fit$residuals^2) # in-sample MSE
+```
+* in-sample
+    + MSE: 2668.692
+    + R-Squared: 0.5866342
+
+```{r}
+dat4$lm_pred = 0
+dat4[-train, "lm_pred"] = lm.pred
+mean((dat4[-train, "lm_pred"] - dat4[-train, "GNSQ_FY"])^2) # out-sample MSE, non-aggr
+SST = sum((dat4[-train, "GNSQ_FY"] - mean(dat4[-train, "GNSQ_FY"]))^2)
+SSE = sum((dat4[-train, "lm_pred"] - mean(dat4[-train, "GNSQ_FY"]))^2)
+r.squared = SSE/SST # out-sample R2, non-aggr
+r.squared 
+```
+* out-sample (non-aggregated)
+    + MSE: 2955.01
+    + R-Squared: 0.5800302
+
+```{r}
+dat.grower = dat4[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
+dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
+mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) # out-sample MSE, aggr
+SST = sum((dat.grower$GNSQ_FY - mean(dat.grower$GNSQ_FY))^2)
+SSE = sum((dat.grower$lm_pred - mean(dat.grower$GNSQ_FY))^2)
+r.squared = SSE/SST # out-sample R2, aggr
+r.squared 
+```
+* out-sample (aggregated)
+    + MSE: 3037.443
+    + R-Squared: 0.5816021
+
+### Churn Prediction - Logistics Regression
+```{r}
+var = c("GRWR_ID", "GNSQ_FY")
+dat4$purchase = 1
+dat4[dat4$GNSQ_FY == 0, "purchase"] = 0
+glm.fit = glm(purchase ~., data = dat4[train, -which(names(dat4) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat4[-train, -which(names(dat4) == var)], type = "response")
+dat4$glm_pred = 0
+dat4[-train, "glm_pred"] = glm.pred
+dat4$pur_pred = 0
+dat4[dat4$glm_pred > 0.5, "pur_pred"] = 1
+mean(dat4[-train, "pur_pred"] == dat4[-train, "purchase"]) 
+```
+* Threshold: 0.5 - Prediction accuracy: 0.8196638
+
+## dat5
+### Data frame: All variables
+```{r}
+attach(corn.data)
+var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
+dat5 = cbind(corn.data[,var], 
+             GNSQ_FYM1,
+             GNSQ_sumLag,
+             GNSQ_FYM1_other,
+             GNSQ_sumLag_other,
+             corn_region
+             )
+```
+
+### Sales Quantity Prediction - Linear Regression
+```{r}
+lm.fit=lm(GNSQ_FY~., data = dat5[train,-which(names(dat5) == "GRWR_ID")])
+lm.pred = predict(lm.fit, newdata = dat5[-train,-which(names(dat5) == "GRWR_ID")])
+summary(lm.fit)$r.squared # in-sample R2
+mean(lm.fit$residuals^2) # in-sample MSE
+```
+* in-sample
+    + MSE: 2680.093
+    + R-Squared: 0.5848682
+
+```{r}
+dat5$lm_pred = 0
+dat5[-train, "lm_pred"] = lm.pred
+mean((dat5[-train, "lm_pred"] - dat5[-train, "GNSQ_FY"])^2) # out-sample MSE, non-aggr
+SST = sum((dat5[-train, "GNSQ_FY"] - mean(dat5[-train, "GNSQ_FY"]))^2)
+SSE = sum((dat5[-train, "lm_pred"] - mean(dat5[-train, "GNSQ_FY"]))^2)
+r.squared = SSE/SST # out-sample R2, non-aggr
+r.squared 
+```
+* out-sample (non-aggregated)
+    + MSE: 2958.257
+    + R-Squared: 0.5782054
+
+```{r}
+dat.grower = dat5[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
+dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
+mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) # out-sample MSE, aggr
+SST = sum((dat.grower$GNSQ_FY - mean(dat.grower$GNSQ_FY))^2)
+SSE = sum((dat.grower$lm_pred - mean(dat.grower$GNSQ_FY))^2)
+r.squared = SSE/SST # out-sample R2, aggr
+r.squared 
+```
+* out-sample (aggregated)
+    + MSE: 3040.738
+    + R-Squared: 0.5797378
+
+### Churn Prediction - Logistics Regression
+```{r}
+var = c("GRWR_ID", "GNSQ_FY")
+dat5$purchase = 1
+dat5[dat5$GNSQ_FY == 0, "purchase"] = 0
+glm.fit = glm(purchase ~., data = dat5[train, -which(names(dat5) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat5[-train, -which(names(dat5) == var)], type = "response")
+dat5$glm_pred = 0
+dat5[-train, "glm_pred"] = glm.pred
+dat5$pur_pred = 0
+dat5[dat5$glm_pred > 0.5, "pur_pred"] = 1
+mean(dat5[-train, "pur_pred"] == dat5[-train, "purchase"]) 
+```
+* Threshold: 0.5 - Prediction accuracy: 0.7855771
