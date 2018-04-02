@@ -146,13 +146,11 @@ intercept = as.numeric(beta[1])
 which.max(table(dat7$BRND_DESC))
 brand_mode_coef = beta[, grepl(".*DEKALB", names(beta))]
 ```
-DEKALB
 #### region
 ```{r}
 which.max(colSums(corn_region))
 region_mode_coef = beta[, grepl("MN_WI", names(beta))]
 ```
-MN_WI
 #### average of numeric variables + intercept + mode brand coefficient + mode region coefficient
 ```{r}
 avg = intercept + avg_numeric + brand_mode_coef + region_mode_coef
