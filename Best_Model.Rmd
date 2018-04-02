@@ -137,6 +137,18 @@ beta_num = data.frame(t(beta[, which(names(beta) %in% num_var)]))
 df = cbind(beta_num, X)
 avg_numeric = sum(df$lm.fit.coefficients * df$X)
 ```
+                     |lm.fit.coefficients    |      X
+-------------------- | --------------------- | ---------
+GNSQ_FYM1            |       0.6790833711    | 29.55970
+GNSQ_FYM1_other      |      -0.0181088655    | 17.58854
+sumLagMON_AREA       |       0.0017335125    | 1659.24221
+MON_AREA_FYM1        |      -0.0009710235    | 105.06471
+OPPO_CROP_AREA_FYM1  |       0.0002348687    | 272.86563
+RECENCY_SCORE_FYM1   |      -0.0248454308    | 319.96021
+FREQUENCY_SCORE_FYM1 |       0.0111194138    | 112.91267
+MONETARY_SCORE_FYM1  |       0.0232568956    |  73.05100
+PURCH_PRBLTY_FYM1    |       0.1806117697    |  34.05276
+
 #### add intercept
 ```{r}
 intercept = as.numeric(beta[1])
