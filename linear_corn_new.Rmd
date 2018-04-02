@@ -469,8 +469,8 @@ summary(lm.fit)$r.squared # in-sample R2
 mean(lm.fit$residuals^2) # in-sample MSE
 ```
 * in-sample
-+ MSE: 2748.183
-+ R-Squared: 0.5791293
+    + MSE: 2731.524
+    + R-Squared: 0.5816805
 
 ```{r}
 dat7$lm_pred = 0
@@ -482,8 +482,8 @@ r.squared = SSE/SST # out-sample R2, non-aggr
 r.squared 
 ```
 * out-sample (non-aggregated)
-+ MSE: 2657.931
-+ R-Squared: 0.6000323
++ MSE: 2652.492
++ R-Squared: 0.6043924
 
 ```{r}
 dat.grower = dat7[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
@@ -495,8 +495,8 @@ r.squared = SSE/SST # out-sample R2, aggr
 r.squared 
 ```
 * out-sample (aggregated)
-+ MSE: 2729.692
-+ R-Squared: 0.601388
++ MSE: 2724.38
++ R-Squared: 0.6057023
 
 ### Churn Prediction - Logistics Regression
 ```{r}
@@ -511,5 +511,5 @@ dat7$pur_pred = 0
 dat7[dat7$glm_pred > 0.5, "pur_pred"] = 1
 mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
 ```
-* Threshold: 0.5 - Prediction accuracy: 0.8260056
+* Threshold: 0.5 - Prediction accuracy: 0.8259721
 
