@@ -134,8 +134,7 @@ X = data.frame(X)
 beta = data.frame(lm.fit$coefficients)
 beta = data.frame(t(beta))
 beta_num = data.frame(t(beta[, which(names(beta) %in% num_var)]))
-df = cbind(beta_num, X)
-avg_numeric = sum(df$lm.fit.coefficients * df$X)
+avg_numeric = sum(beta_num * X)
 ```
 Continuous Variables | lm.fit.coefficients   |   variable mean(X)
 -------------------- | --------------------- | -----------------
@@ -165,7 +164,7 @@ DEKALB: 6.55233
 #### region
 ```{r}
 which.max(colSums(corn_region))
-region_mode_coef = beta[, grepl("MN_WI", names(beta))]
+region_mode_coef = beta[, "MN_WI"]
 ```
 MN_WI: 0.03309533
 #### average of numeric variables + intercept + mode brand coefficient + mode region coefficient
@@ -174,4 +173,78 @@ avg = intercept + avg_numeric + brand_mode_coef + region_mode_coef
 avg
 ```
 sales quantity for a typical grower: 28.05405
+
+### mean -> max for KPI
+Significant KPIs: recency, frequency, monetary, purchase probability
+#### Recency
+```{r}
+# which.max(table(dat7$RECENCY_SCORE_FYM1)) # 500
+max(dat7$RECENCY_SCORE_FYM1)
+X1 = X
+X1[row.names(X1) == "RECENCY_SCORE_FYM1", ] = 500
+avg1 = intercept  + brand_mode_coef + region_mode_coef + sum(beta_num * X1) # 23.58089
+```
+
+#### Frequency
+```{r}
+# which.max(table(dat7$FREQUENCY_SCORE_FYM1)) # 50
+max(dat7$FREQUENCY_SCORE_FYM1)
+X2 = X
+X2[row.names(X1) == "FREQUENCY_SCORE_FYM1", ] = 250
+avg2 = intercept  + brand_mode_coef + region_mode_coef + sum(beta_num * X2) # 29.57839
+```
+
+#### Monetary
+```{r}
+# which.max(table(dat7$MONETARY_SCORE_FYM1)) # 125
+max(dat7$MONETARY_SCORE_FYM1)
+X3 = X
+X3[row.names(X1) == "MONETARY_SCORE_FYM1", ] = 125
+avg3 = intercept  + brand_mode_coef + region_mode_coef + sum(beta_num * X3) # 29.26223
+```
+
+#### Purchase Probability
+```{r}
+max(dat7$PURCH_PRBLTY_FYM1) # 100
+X4 = X
+X4[row.names(X1) == "PURCH_PRBLTY_FYM1", ] = 100
+avg4 = intercept  + brand_mode_coef + region_mode_coef + sum(beta_num * X4) # 39.9649
+```
+
+### turn on and off for categorical variables (Region)
+Significant regions: MO_KS_CO, NE, OH_NorthEastern_sts
+```{r}
+avg_r1 = avg - beta[, "MN_WI"] + beta[, "MO_KS_CO"]
+avg_r2 = avg - beta[, "MN_WI"] + beta[, "NE"]
+avg_r3 = avg - beta[, "MN_WI"] + beta[, "OH_NorthEastern_sts"]
+```
+
+### Impacts Matrix
+```{r}
+M = matrix(0, 7, 3)
+colnames(M) = c("GNSQ", "Difference", "%change")
+row.names(M) = c("Recency", "Frequency", "Monetary", "Purchase Prob", "MO_KS_CO", "NE", "OH_NorthEastern_sts")
+M[1,1] = avg1
+M[2,1] = avg2
+M[3,1] = avg3
+M[4,1] = avg4
+M[5,1] = avg_r1
+M[6,1] = avg_r2
+M[7,1] = avg_r3
+
+M[,2] = round(M[,1] - avg, 3)
+M[,3] = round((M[,1] - avg)/avg,3) * 100
+
+```
+
+Significant Var    | GNSQ      | Difference | %change
+------------------ | --------- | ---------- | -------
+Recency            |  23.58089 |    -4.473  | -15.9
+Frequency          |  29.57839 |     1.524  |   5.4
+Monetary           |  29.26223 |     1.208  |   4.3
+Purchase Prob      |  39.96490 |    11.911  |  42.5
+MO_KS_CO           |  28.95527 |     0.901  |   3.2
+NE                 |  30.91522 |     2.861  |  10.2
+OH_NorthEastern_sts|  26.86357 |    -1.190  |  -4.2
+
 
