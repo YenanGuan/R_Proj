@@ -126,23 +126,8 @@ P: Prediction
        'Positive' Class : 0               
        
 ### Analysis through a typical grower
+Take means of all numeric variables
 ```{r}
-beta = data.frame(lm.fit$coefficients)
-beta = data.frame(t(beta))
-names(beta)[names(beta) == "BRND_DESCChannel"] = "Channel"
-beta = beta[, !grepl("BRND_DESC.*", names(beta))]
-beta = data.frame(t(beta))
-
-names(dat4)
-
-beta
-row.names(beta)
-dim(beta)
-[1] "X.Intercept."         "Channel"              "GNSQ_FYM1"            "sumLagGNSQ"           "IL"                  
- [6] "IA"                   "MI_KY_IN"             "MN_WI"                "MO_KS_CO"             "ND_SD"               
-[11] "NE"                   "OH_NorthEastern_sts"  "MON_AREA_FYM1"        "OPPO_CROP_AREA_FYM1"  "RECENCY_SCORE_FYM1"  
-[16] "FREQUENCY_SCORE_FYM1" "MONETARY_SCORE_FYM1"  "PURCH_PRBLTY_FYM1"  
-
 num_var = c("GNSQ_FYM1", "GNSQ_FYM1_other", "sumLagMON_AREA", "MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1", "sumLagMON_AREA", "RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")
 X = colMeans(dat7[, which(names(dat7) %in% num_var)])
 X = data.frame(X)
@@ -150,15 +135,26 @@ beta = data.frame(lm.fit$coefficients)
 beta = data.frame(t(beta))
 beta_num = data.frame(t(beta[, which(names(beta) %in% num_var)]))
 df = cbind(beta_num, X)
-
+avg_numeric = sum(df$lm.fit.coefficients * df$X)
 ```
-
-
-var = c("GRWR_ID", "GNSQ_FY")
-dat1$purchase = 1
-dat1[dat1$GNSQ_FY == 0, "purchase"] = 0
-glm.fit = glm(purchase ~., data = dat1[train, -which(names(dat1) == var)], family = binomial)
-glm.pred = predict(glm.fit, dat1[-train, -which(names(dat1) == var)], type = "response")
-
+add intercept
+```{r}
+intercept = as.numeric(beta[1])
+```
+brand 
+```{r}
+which.max(table(dat7$BRND_DESC))
+brand_mode_coef = beta[, grepl(".*DEKALB", names(beta))]
+```
+region
+```{r}
+which.max(colSums(corn_region))
+region_mode_coef = beta[, grepl("MN_WI", names(beta))]
+```
+average of numeric variables + intercept + mode brand coefficient + mode region coefficient
+```{r}
+avg = intercept + avg_numeric + brand_mode_coef + region_mode_coef
+avg
+```
 
 
