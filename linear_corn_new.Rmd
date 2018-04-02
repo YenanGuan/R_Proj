@@ -454,7 +454,6 @@ var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat7 = cbind(corn.data[,var], 
              GNSQ_FYM1,
              GNSQ_FYM1_other,
-             sumLagMON_AREA,
              corn_region,
              corn_AREA_FYM1,
              sumLagMON_AREA,
