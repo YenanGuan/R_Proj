@@ -137,7 +137,7 @@ beta_num = data.frame(t(beta[, which(names(beta) %in% num_var)]))
 df = cbind(beta_num, X)
 avg_numeric = sum(df$lm.fit.coefficients * df$X)
 ```
-                     |lm.fit.coefficients    |      X
+                     | lm.fit.coefficients   |      X
 -------------------- | --------------------- | ---------
 GNSQ_FYM1            |       0.6790833711    | 29.55970
 GNSQ_FYM1_other      |      -0.0181088655    | 17.58854
