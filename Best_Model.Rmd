@@ -5,7 +5,7 @@ date: "4/1/2018"
 output: html_document
 ---
 ## Import the latest flatfile
-```{r message = FALSE}
+```{r message = FALSE, warning = FALSE}
 rm(list = ls())
 library(readr)
 corn.data <- read_csv("~/Downloads/Flatfile_Corn_4.1.csv")
@@ -22,48 +22,50 @@ corn_AREA_FYM1 = corn.data[, c("MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1")]
 corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")]
 ```
 
-## dat4
-### Data frame: all brand-specific sales quantity + region + area + KPI
+## dat7
+### Data frame: one lagged year sales quantity + region + area + KPI + lagged Monsanto area
 ```{r message = FALSE}
 n = dim(corn.data)[1]
 set.seed(1)
 train = sample(n, 0.9*n)
 attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
-dat4 = cbind(corn.data[,var], 
+dat7 = cbind(corn.data[,var], 
              GNSQ_FYM1,
-             GNSQ_sumLag,
+             GNSQ_FYM1_other,
+             sumLagMON_AREA,
              corn_region,
              corn_AREA_FYM1,
+             sumLagMON_AREA,
              corn_KPI_FYM1)
 ```
 
 ### Sales Quantity Prediction - Linear Regression
 ```{r}
-lm.fit=lm(GNSQ_FY~., data = dat4[train,-which(names(dat4) == "GRWR_ID")])
-lm.pred = predict(lm.fit, newdata = dat4[-train,-which(names(dat4) == "GRWR_ID")])
+lm.fit=lm(GNSQ_FY~., data = dat7[train,-which(names(dat7) == "GRWR_ID")])
+lm.pred = predict(lm.fit, newdata = dat7[-train,-which(names(dat7) == "GRWR_ID")])
 summary(lm.fit)$r.squared # in-sample R2
 mean(lm.fit$residuals^2) # in-sample MSE
 ```
 * in-sample
-    + MSE: 2724.536
-    + R-Squared: 0.5827506
+    + MSE: 2731.524
+    + R-Squared: 0.5816805
 
 ```{r}
-dat4$lm_pred = 0
-dat4[-train, "lm_pred"] = lm.pred
-mean((dat4[-train, "lm_pred"] - dat4[-train, "GNSQ_FY"])^2) # out-sample MSE, non-aggr
-SST = sum((dat4[-train, "GNSQ_FY"] - mean(dat4[-train, "GNSQ_FY"]))^2)
-SSE = sum((dat4[-train, "lm_pred"] - mean(dat4[-train, "GNSQ_FY"]))^2)
+dat7$lm_pred = 0
+dat7[-train, "lm_pred"] = lm.pred
+mean((dat7[-train, "lm_pred"] - dat7[-train, "GNSQ_FY"])^2) # out-sample MSE, non-aggr
+SST = sum((dat7[-train, "GNSQ_FY"] - mean(dat7[train, "GNSQ_FY"]))^2)
+SSE = sum((dat7[-train, "lm_pred"] - mean(dat7[-train, "GNSQ_FY"]))^2)
 r.squared = SSE/SST # out-sample R2, non-aggr
 r.squared 
 ```
 * out-sample (non-aggregated)
-    + MSE: 2720.469
-    + R-Squared: 0.617632
++ MSE: 2652.492
++ R-Squared: 0.6043924
 
 ```{r}
-dat.grower = dat4[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
+dat.grower = dat7[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
 dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
 mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) # out-sample MSE, aggr
 SST = sum((dat.grower$GNSQ_FY - mean(dat.grower$GNSQ_FY))^2)
@@ -72,53 +74,55 @@ r.squared = SSE/SST # out-sample R2, aggr
 r.squared 
 ```
 * out-sample (aggregated)
-    + MSE: 2792.469
-    + R-Squared: 0.6214702
++ MSE: 2724.38
++ R-Squared: 0.6057023
 
 ### Churn Prediction - Logistics Regression
 ```{r}
 var = c("GRWR_ID", "GNSQ_FY")
-dat4$purchase = 1
-dat4[dat4$GNSQ_FY == 0, "purchase"] = 0
-glm.fit = glm(purchase ~., data = dat4[train, -which(names(dat4) == var)], family = binomial)
-glm.pred = predict(glm.fit, dat4[-train, -which(names(dat4) == var)], type = "response")
-dat4$glm_pred = 0
-dat4[-train, "glm_pred"] = glm.pred
-dat4$pur_pred = 0
-dat4[dat4$glm_pred > 0.5, "pur_pred"] = 1
-mean(dat4[-train, "pur_pred"] == dat4[-train, "purchase"]) 
+dat7$purchase = 1
+dat7[dat7$GNSQ_FY == 0, "purchase"] = 0
+glm.fit = glm(purchase ~., data = dat7[train, -which(names(dat7) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat7[-train, -which(names(dat7) == var)], type = "response")
+dat7$glm_pred = 0
+dat7[-train, "glm_pred"] = glm.pred
+dat7$pur_pred = 0
+dat7[dat7$glm_pred > 0.5, "pur_pred"] = 1
+mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
 ```
-* Threshold: 0.5 - Prediction accuracy: 0.8262396
+* Threshold: 0.5 - Prediction accuracy: 0.8259721
 
 #### Confusion Matrix
-```{r}
+```{r message = FALSE}
 library(caret)
 library(e1071)
-confusionMatrix(data = as.factor(dat4[-train, "pur_pred"]), reference = as.factor(dat4[-train, "purchase"]))
+confusionMatrix(data = as.factor(dat7[-train, "pur_pred"]), reference = as.factor(dat7[-train, "purchase"]))
 ```
 Confusion Matrix and Statistics
+R: Reference
+P: Prediction
 
-          Reference
-Prediction     0     1
-         0 18404  3072
-         1  2125  6308
+    |   R0   |   R1
+--- | ------ | ------
+P0  | 18397  | 3073
+P1  | 2132   | 6307
                                           
-               Accuracy : 0.8262          
-                 95% CI : (0.8219, 0.8305)
+               Accuracy : 0.826           
+                 95% CI : (0.8216, 0.8303)
     No Information Rate : 0.6864          
     P-Value [Acc > NIR] : < 2.2e-16       
                                           
-                  Kappa : 0.585           
+                  Kappa : 0.5845          
  Mcnemar's Test P-Value : < 2.2e-16       
                                           
-            Sensitivity : 0.8965          
-            Specificity : 0.6725          
-         Pos Pred Value : 0.8570          
-         Neg Pred Value : 0.7480          
+            Sensitivity : 0.8961          
+            Specificity : 0.6724          
+         Pos Pred Value : 0.8569          
+         Neg Pred Value : 0.7474          
              Prevalence : 0.6864          
-         Detection Rate : 0.6153          
-   Detection Prevalence : 0.7180          
-      Balanced Accuracy : 0.7845          
+         Detection Rate : 0.6151          
+   Detection Prevalence : 0.7178          
+      Balanced Accuracy : 0.7843          
                                           
        'Positive' Class : 0               
        
