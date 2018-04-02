@@ -4,6 +4,24 @@ author: "Yenan Guan"
 date: "4/1/2018"
 output: html_document
 ---
+## Import the latest flatfile
+```{r message = FALSE}
+rm(list = ls())
+library(readr)
+corn.data <- read_csv("~/Downloads/Flatfile_Corn_4.1.csv")
+corn.data = data.frame(corn.data)
+names(corn.data)
+corn.data = corn.data[, !names(corn.data) %in% c("X1")]
+```
+
+## Categorize the variables
+```{r}
+# corn_region = corn.data[,c("IL","IA","MI_KY_IN","MN_WI","MO_KS_CO","ND_SD","NE","OH_NorthEastern_sts","Unknown")]
+corn_region = corn.data[,c("IL","IA","MI_KY_IN","MN_WI","MO_KS_CO","ND_SD","NE","OH_NorthEastern_sts")]
+corn_RFM_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1")]
+corn_AREA_FYM1 = corn.data[, c("MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1")]
+corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")]
+```
 
 ## dat4
 ### Data frame: all brand-specific sales quantity + region + area + KPI
@@ -15,7 +33,8 @@ attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat4 = cbind(corn.data[,var], 
              GNSQ_FYM1,
-             GNSQ_sumLag,
+             sumLagGNSQ,
+             # GNSQ_sumLag,
              corn_region,
              corn_AREA_FYM1,
              corn_KPI_FYM1)
@@ -29,8 +48,8 @@ summary(lm.fit)$r.squared # in-sample R2
 mean(lm.fit$residuals^2) # in-sample MSE
 ```
 * in-sample
-    + MSE: 2655.72
-    + R-Squared: 0.5886434
+    + MSE: 2724.536
+    + R-Squared: 0.5827506
 
 ```{r}
 dat4$lm_pred = 0
@@ -42,8 +61,8 @@ r.squared = SSE/SST # out-sample R2, non-aggr
 r.squared 
 ```
 * out-sample (non-aggregated)
-    + MSE: 2947.72
-    + R-Squared: 0.5810378
+    + MSE: 2720.469
+    + R-Squared: 0.617632
 
 ```{r}
 dat.grower = dat4[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
@@ -55,8 +74,8 @@ r.squared = SSE/SST # out-sample R2, aggr
 r.squared 
 ```
 * out-sample (aggregated)
-    + MSE: 3029.415
-    + R-Squared: 0.582372
+    + MSE: 2792.469
+    + R-Squared: 0.6214702
 
 ### Churn Prediction - Logistics Regression
 ```{r}
@@ -71,7 +90,7 @@ dat4$pur_pred = 0
 dat4[dat4$glm_pred > 0.5, "pur_pred"] = 1
 mean(dat4[-train, "pur_pred"] == dat4[-train, "purchase"]) 
 ```
-* Threshold: 0.5 - Prediction accuracy: 0.8273771
+* Threshold: 0.5 - Prediction accuracy: 0.8262396
 
 #### Confusion Matrix
 ```{r}
@@ -83,39 +102,45 @@ Confusion Matrix and Statistics
 
           Reference
 Prediction     0     1
-         0 18169  2928
-         1  2197  6395
-                                         
-               Accuracy : 0.8274         
-                 95% CI : (0.823, 0.8317)
-    No Information Rate : 0.686          
-    P-Value [Acc > NIR] : < 2.2e-16      
-                                         
-                  Kappa : 0.5906         
- Mcnemar's Test P-Value : < 2.2e-16      
-                                         
-            Sensitivity : 0.8921         
-            Specificity : 0.6859         
-         Pos Pred Value : 0.8612         
-         Neg Pred Value : 0.7443         
-             Prevalence : 0.6860         
-         Detection Rate : 0.6120         
-   Detection Prevalence : 0.7106         
-      Balanced Accuracy : 0.7890         
-                                         
-       'Positive' Class : 0           
+         0 18404  3072
+         1  2125  6308
+                                          
+               Accuracy : 0.8262          
+                 95% CI : (0.8219, 0.8305)
+    No Information Rate : 0.6864          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.585           
+ Mcnemar's Test P-Value : < 2.2e-16       
+                                          
+            Sensitivity : 0.8965          
+            Specificity : 0.6725          
+         Pos Pred Value : 0.8570          
+         Neg Pred Value : 0.7480          
+             Prevalence : 0.6864          
+         Detection Rate : 0.6153          
+   Detection Prevalence : 0.7180          
+      Balanced Accuracy : 0.7845          
+                                          
+       'Positive' Class : 0               
        
-#### Analysis through a typical grower
+### Analysis through a typical grower
 ```{r}
+beta = data.frame(lm.fit$coefficients)
+beta = data.frame(t(beta))
+names(beta)[names(beta) == "BRND_DESCChannel"] = "Channel"
+beta = beta[, !grepl("BRND_DESC.*", names(beta))]
+beta = data.frame(t(beta))
 
+names(dat4)
 
-
-
-
-
-
-
-
+beta
+row.names(beta)
+dim(beta)
+[1] "X.Intercept."         "Channel"              "GNSQ_FYM1"            "sumLagGNSQ"           "IL"                  
+ [6] "IA"                   "MI_KY_IN"             "MN_WI"                "MO_KS_CO"             "ND_SD"               
+[11] "NE"                   "OH_NorthEastern_sts"  "MON_AREA_FYM1"        "OPPO_CROP_AREA_FYM1"  "RECENCY_SCORE_FYM1"  
+[16] "FREQUENCY_SCORE_FYM1" "MONETARY_SCORE_FYM1"  "PURCH_PRBLTY_FYM1"   
 ```
 
 
