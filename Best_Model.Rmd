@@ -149,24 +149,29 @@ FREQUENCY_SCORE_FYM1 |       0.0111194138    | 112.91267
 MONETARY_SCORE_FYM1  |       0.0232568956    |  73.05100
 PURCH_PRBLTY_FYM1    |       0.1806117697    |  34.05276
 
+23.74862
+
 #### add intercept
 ```{r}
 intercept = as.numeric(beta[1])
 ```
+-2.279988
 #### brand 
 ```{r}
 which.max(table(dat7$BRND_DESC))
 brand_mode_coef = beta[, grepl(".*DEKALB", names(beta))]
 ```
+DEKALB: 6.55233
 #### region
 ```{r}
 which.max(colSums(corn_region))
 region_mode_coef = beta[, grepl("MN_WI", names(beta))]
 ```
+MN_WI: 0.03309533
 #### average of numeric variables + intercept + mode brand coefficient + mode region coefficient
 ```{r}
 avg = intercept + avg_numeric + brand_mode_coef + region_mode_coef
 avg
 ```
-28.05405
+sales quantity for a typical grower: 28.05405
 
