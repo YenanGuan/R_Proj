@@ -91,6 +91,16 @@ mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"])
 ```
 * Threshold: 0.5 - Prediction accuracy: 0.8259721
 
+#### Choose Threshold by TDL (Top Decile Lift)
+```{r}
+bucket = TopDecileLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase)
+# plotLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase)
+t = dim(dat7[dat7$GNSQ_FY > bucket, ])[1]/dim(dat7)[1]
+dat7[dat7$glm_pred > t, "pur_pred"] = 1
+mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
+```
+* New Threshold chosen by TDL - Prediction accuracy: 0.7972517
+
 #### Confusion Matrix
 ```{r message = FALSE}
 library(caret)
