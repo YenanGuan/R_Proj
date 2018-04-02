@@ -97,6 +97,7 @@ mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"])
 
 plotLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase, cumulative = FALSE)
 new_t = quantile(dat7[-train, "glm_pred"], 0.75)
+new_t # 0.5763251
 dat7$pur_pred = 0
 dat7[dat7$glm_pred > new_t, "pur_pred"] = 1
 mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
