@@ -60,8 +60,8 @@ r.squared = SSE/SST # out-sample R2, non-aggr
 r.squared 
 ```
 * out-sample (non-aggregated)
-+ MSE: 2652.492
-+ R-Squared: 0.6043924
+    + MSE: 2652.492
+    + R-Squared: 0.6043924
 
 ```{r}
 dat.grower = dat7[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
@@ -73,8 +73,8 @@ r.squared = SSE/SST # out-sample R2, aggr
 r.squared 
 ```
 * out-sample (aggregated)
-+ MSE: 2724.38
-+ R-Squared: 0.6057023
+    + MSE: 2724.38
+    + R-Squared: 0.6057023
 
 ### Churn Prediction - Logistics Regression
 ```{r}
