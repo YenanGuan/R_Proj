@@ -85,7 +85,6 @@ glm.fit = glm(purchase ~., data = dat7[train, -which(names(dat7) == var)], famil
 glm.pred = predict(glm.fit, dat7[-train, -which(names(dat7) == var)], type = "response")
 dat7$glm_pred = 0
 dat7[-train, "glm_pred"] = glm.pred
-dat7$pur_pred = 0
 dat7[dat7$glm_pred > 0.5, "pur_pred"] = 1
 mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
 ```
@@ -93,10 +92,13 @@ mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"])
 
 #### Choose Threshold by TDL (Top Decile Lift)
 ```{r}
-bucket = TopDecileLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase)
-# plotLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase)
-t = dim(dat7[dat7$GNSQ_FY > bucket, ])[1]/dim(dat7)[1]
-dat7[dat7$glm_pred > t, "pur_pred"] = 1
+# bucket = TopDecileLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase)
+# dim(dat7[dat7$GNSQ_FY > bucket, ])[1]/dim(dat7)[1]
+
+plotLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase, cumulative = FALSE)
+new_t = quantile(dat7[-train, "glm_pred"], 0.73)
+dat7$pur_pred = 0
+dat7[dat7$glm_pred > new_t, "pur_pred"] = 1
 mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
 ```
 * New Threshold chosen by TDL - Prediction accuracy: 0.7972517
