@@ -126,7 +126,7 @@ P: Prediction
        'Positive' Class : 0               
        
 ### Analysis through a typical grower
-Take means of all numeric variables
+#### Take means of all numeric variables
 ```{r}
 num_var = c("GNSQ_FYM1", "GNSQ_FYM1_other", "sumLagMON_AREA", "MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1", "sumLagMON_AREA", "RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")
 X = colMeans(dat7[, which(names(dat7) %in% num_var)])
@@ -137,24 +137,26 @@ beta_num = data.frame(t(beta[, which(names(beta) %in% num_var)]))
 df = cbind(beta_num, X)
 avg_numeric = sum(df$lm.fit.coefficients * df$X)
 ```
-add intercept
+#### add intercept
 ```{r}
 intercept = as.numeric(beta[1])
 ```
-brand 
+#### brand 
 ```{r}
 which.max(table(dat7$BRND_DESC))
 brand_mode_coef = beta[, grepl(".*DEKALB", names(beta))]
 ```
-region
+DEKALB
+#### region
 ```{r}
 which.max(colSums(corn_region))
 region_mode_coef = beta[, grepl("MN_WI", names(beta))]
 ```
-average of numeric variables + intercept + mode brand coefficient + mode region coefficient
+MN_WI
+#### average of numeric variables + intercept + mode brand coefficient + mode region coefficient
 ```{r}
 avg = intercept + avg_numeric + brand_mode_coef + region_mode_coef
 avg
 ```
-
+28.05405
 
