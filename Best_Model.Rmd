@@ -16,8 +16,7 @@ corn.data = corn.data[, !names(corn.data) %in% c("X1")]
 
 ## Categorize the variables
 ```{r}
-# corn_region = corn.data[,c("IL","IA","MI_KY_IN","MN_WI","MO_KS_CO","ND_SD","NE","OH_NorthEastern_sts","Unknown")]
-corn_region = corn.data[,c("IL","IA","MI_KY_IN","MN_WI","MO_KS_CO","ND_SD","NE","OH_NorthEastern_sts")]
+corn_region = corn.data[,c("IL","IA","MI_KY_IN","MN_WI","MO_KS_CO","ND_SD","NE","OH_NorthEastern_sts","Unknown")]
 corn_RFM_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1")]
 corn_AREA_FYM1 = corn.data[, c("MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1")]
 corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")]
@@ -33,8 +32,7 @@ attach(corn.data)
 var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat4 = cbind(corn.data[,var], 
              GNSQ_FYM1,
-             sumLagGNSQ,
-             # GNSQ_sumLag,
+             GNSQ_sumLag,
              corn_region,
              corn_AREA_FYM1,
              corn_KPI_FYM1)
