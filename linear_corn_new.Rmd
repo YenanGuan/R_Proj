@@ -27,19 +27,21 @@ corn_KPI_FYM1 = corn.data[, c("RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MON
 # Regression: linear + logit
 * Model 1: All variables
 * Model 2: All variables but POP
-* **Model 3: one lagged year sales quantity + region + area + KPI**
+* Model 3: one lagged year sales quantity + region + area + KPI
 * Model 4: all brand-specific sales quantity + region + area + KPI
 * Model 5: all sales quantity, no KPIs
 * Model 6: all brand-specific sales quantity + other brand FY1 GNSQ + region + area + KPI
+* **Model 7: (modification on model 3) lagged Monsanto area added to Model 3**
 
 Model | out-sample MSE | out-sample R2 | Churn_pred accuracy
 ----- | -------------- | ------------- | -------------------
   1   |    3082.059    |   0.6805047   |     0.8263733
   2   |    3135.773    |   0.6840467   |     0.8151727
-**3** |  **2729.692**  | **0.601388**  |   **0.8260056**
+  3   |    2729.692    |   0.601388    |     0.8260056  
   4   |    2792.469    |   0.6214702   |     0.8262396 
   5   |    3090.079    |   0.6754292   |     0.7797653
   6   |    2826.43     |   0.6272803   |     0.8264068
+**7** |  **2729.692**  | **0.601388**  |   **0.8260056** 
 
 ### preparations: set seed & specify training and test rows
 ```{r}
@@ -443,3 +445,71 @@ dat6[dat6$glm_pred > 0.5, "pur_pred"] = 1
 mean(dat6[-train, "pur_pred"] == dat6[-train, "purchase"]) 
 ```
 * Threshold: 0.5 - Prediction accuracy: 0.8264068
+
+## dat7
+### Data frame: one lagged year sales quantity + region + area + KPI + lagged Monsanto area
+```{r message = FALSE}
+attach(corn.data)
+var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
+dat7 = cbind(corn.data[,var], 
+             GNSQ_FYM1,
+             GNSQ_FYM1_other,
+             sumLagMON_AREA,
+             corn_region,
+             corn_AREA_FYM1,
+             sumLagMON_AREA,
+             corn_KPI_FYM1)
+```
+
+### Sales Quantity Prediction - Linear Regression
+```{r}
+lm.fit=lm(GNSQ_FY~., data = dat7[train,-which(names(dat7) == "GRWR_ID")])
+lm.pred = predict(lm.fit, newdata = dat7[-train,-which(names(dat7) == "GRWR_ID")])
+summary(lm.fit)$r.squared # in-sample R2
+mean(lm.fit$residuals^2) # in-sample MSE
+```
+* in-sample
++ MSE: 2748.183
++ R-Squared: 0.5791293
+
+```{r}
+dat7$lm_pred = 0
+dat7[-train, "lm_pred"] = lm.pred
+mean((dat7[-train, "lm_pred"] - dat7[-train, "GNSQ_FY"])^2) # out-sample MSE, non-aggr
+SST = sum((dat7[-train, "GNSQ_FY"] - mean(dat7[train, "GNSQ_FY"]))^2)
+SSE = sum((dat7[-train, "lm_pred"] - mean(dat7[-train, "GNSQ_FY"]))^2)
+r.squared = SSE/SST # out-sample R2, non-aggr
+r.squared 
+```
+* out-sample (non-aggregated)
++ MSE: 2657.931
++ R-Squared: 0.6000323
+
+```{r}
+dat.grower = dat7[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
+dat.grower = aggregate(.~ GRWR_ID, dat.grower, sum)
+mean((dat.grower$lm_pred - dat.grower$GNSQ_FY)^2) # out-sample MSE, aggr
+SST = sum((dat.grower$GNSQ_FY - mean(dat.grower$GNSQ_FY))^2)
+SSE = sum((dat.grower$lm_pred - mean(dat.grower$GNSQ_FY))^2)
+r.squared = SSE/SST # out-sample R2, aggr
+r.squared 
+```
+* out-sample (aggregated)
++ MSE: 2729.692
++ R-Squared: 0.601388
+
+### Churn Prediction - Logistics Regression
+```{r}
+var = c("GRWR_ID", "GNSQ_FY")
+dat7$purchase = 1
+dat7[dat7$GNSQ_FY == 0, "purchase"] = 0
+glm.fit = glm(purchase ~., data = dat7[train, -which(names(dat7) == var)], family = binomial)
+glm.pred = predict(glm.fit, dat7[-train, -which(names(dat7) == var)], type = "response")
+dat7$glm_pred = 0
+dat7[-train, "glm_pred"] = glm.pred
+dat7$pur_pred = 0
+dat7[dat7$glm_pred > 0.5, "pur_pred"] = 1
+mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
+```
+* Threshold: 0.5 - Prediction accuracy: 0.8260056
+
