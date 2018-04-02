@@ -102,10 +102,10 @@ Confusion Matrix and Statistics
 R: Reference
 P: Prediction
 
-    |   R0   |   R1
---- | ------ | ------
-P0  | 18397  | 3073
-P1  | 2132   | 6307
+  Confusion Matrix  |   Reference 0   |   Reference 1
+------------------- | --------------- | --------------
+  Prediction 0      | 18397           | 3073
+  Prediction 1      | 2132            | 6307
                                           
                Accuracy : 0.826           
                  95% CI : (0.8216, 0.8303)
