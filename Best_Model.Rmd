@@ -8,7 +8,7 @@ output: html_document
 ```{r message = FALSE, warning = FALSE}
 rm(list = ls())
 library(readr)
-corn.data <- read_csv("~/Downloads/Flatfile_Corn_4.1.csv")
+corn.data <- read_csv("~/Downloads/Flatfile_Corn_4.3.csv")
 corn.data = data.frame(corn.data)
 names(corn.data)
 corn.data = corn.data[, !names(corn.data) %in% c("X1")]
@@ -33,7 +33,7 @@ var = c("GRWR_ID", "GNSQ_FY", "BRND_DESC")
 dat7 = cbind(corn.data[,var], 
              GNSQ_FYM1,
              GNSQ_FYM1_other,
-             sumLagMON_AREA,
+             MON_AREA_sumLag,
              corn_region,
              corn_AREA_FYM1,
              corn_KPI_FYM1)
@@ -47,8 +47,8 @@ summary(lm.fit)$r.squared # in-sample R2
 mean(lm.fit$residuals^2) # in-sample MSE
 ```
 * in-sample
-    + MSE: 2731.524
-    + R-Squared: 0.5816805
+    + MSE: 2740.169
+    + R-Squared: 0.5803566
 
 ```{r}
 dat7$lm_pred = 0
@@ -60,8 +60,8 @@ r.squared = SSE/SST # out-sample R2, non-aggr
 r.squared 
 ```
 * out-sample (non-aggregated)
-    + MSE: 2652.492
-    + R-Squared: 0.6043924
+    + MSE: 2649.425
+    + R-Squared: 0.6007627
 
 ```{r}
 dat.grower = dat7[-train, c("GRWR_ID", "GNSQ_FY", "lm_pred")]
@@ -73,8 +73,8 @@ r.squared = SSE/SST # out-sample R2, aggr
 r.squared 
 ```
 * out-sample (aggregated)
-    + MSE: 2724.38
-    + R-Squared: 0.6057023
+    + MSE: 2720.872
+    + R-Squared: 0.6021425
 
 ### Churn Prediction - Logistics Regression
 ```{r}
@@ -85,24 +85,36 @@ glm.fit = glm(purchase ~., data = dat7[train, -which(names(dat7) == var)], famil
 glm.pred = predict(glm.fit, dat7[-train, -which(names(dat7) == var)], type = "response")
 dat7$glm_pred = 0
 dat7[-train, "glm_pred"] = glm.pred
+dat7$pur_pred = 0
 dat7[dat7$glm_pred > 0.5, "pur_pred"] = 1
 mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
 ```
-* Threshold: 0.5 - Prediction accuracy: 0.8259721
+* Threshold: 0.5 - Prediction accuracy: 0.8260056
 
 #### Choose Threshold by TDL (Top Decile Lift)
 ```{r}
 # bucket = TopDecileLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase)
 # dim(dat7[dat7$GNSQ_FY > bucket, ])[1]/dim(dat7)[1]
 
-plotLift(predicted = dat7$GNSQ_FY, labels = dat7$purchase, cumulative = FALSE)
-new_t = quantile(dat7[-train, "glm_pred"], 0.75)
-new_t # 0.5763251
+library(lift)
+plotLift(predicted = dat_new$pur_pred, labels = dat_new$purchase, cumulative = TRUE)
+new_t = quantile(dat7[-train, "glm_pred"], 0.7)
+new_t # 0.4534802
 dat7$pur_pred = 0
 dat7[dat7$glm_pred > new_t, "pur_pred"] = 1
-mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"]) 
+mean(dat7[-train, "pur_pred"] == dat7[-train, "purchase"])
+
+dat_new = dat7[-train, ]
+perc = 0.7
+new_t = quantile(dat_new[, "glm_pred"], perc)
+score1 = mean(dat_new[dat_new$glm_pred > new_t, "pur_pred"] == dat_new[, "purchase"])
+score2 = mean(dat_new[, "pur_pred"] == dat_new[, "purchase"])
+
+
+score1 = dat_new[dat_new$glm_pred > new_t, "glm_pred"]
+
 ```
-* New Threshold chosen by TDL - Prediction accuracy: 0.7972517
+* New Threshold chosen by TDL - Prediction accuracy: 0.8230967
 
 #### Confusion Matrix
 ```{r message = FALSE}
@@ -141,7 +153,7 @@ P: Prediction
 ### Analysis through a typical grower
 #### Take means of all numeric variables
 ```{r}
-num_var = c("GNSQ_FYM1", "GNSQ_FYM1_other", "sumLagMON_AREA", "MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1", "sumLagMON_AREA", "RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")
+num_var = c("GNSQ_FYM1", "GNSQ_FYM1_other", "MON_AREA_sumLag", "MON_AREA_FYM1", "OPPO_CROP_AREA_FYM1", "MON_AREA_sumLag", "RECENCY_SCORE_FYM1", "FREQUENCY_SCORE_FYM1", "MONETARY_SCORE_FYM1", "PURCH_PRBLTY_FYM1")
 X = colMeans(dat7[, which(names(dat7) %in% num_var)])
 X = data.frame(X)
 beta = data.frame(lm.fit$coefficients)
@@ -153,7 +165,7 @@ Continuous Variables | lm.fit.coefficients   |   variable mean(X)
 -------------------- | --------------------- | -----------------
 GNSQ_FYM1            |       0.6790833711    | 29.55970
 GNSQ_FYM1_other      |      -0.0181088655    | 17.58854
-sumLagMON_AREA       |       0.0017335125    | 1659.24221
+MON_AREA_sumLag      |       0.0017335125    | 1659.24221
 MON_AREA_FYM1        |      -0.0009710235    | 105.06471
 OPPO_CROP_AREA_FYM1  |       0.0002348687    | 272.86563
 RECENCY_SCORE_FYM1   |      -0.0248454308    | 319.96021
